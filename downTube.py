@@ -12,5 +12,3 @@ print('downloading..')
 vid.download(r'C:\Users\sruls\OneDrive\Desktop\yt-dl', yt.title)
 
 print('download complete of "' + yt.title + '"')
-
-print('hi')
