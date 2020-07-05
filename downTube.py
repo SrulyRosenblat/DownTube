@@ -1,6 +1,10 @@
 from pytube import YouTube
 link = input('enter a url to download:  ')
-yt = YouTube(link)
+try:
+    yt = YouTube(link)   
+except:
+    print('failed to conect to url')
+
 choice = input('enter the resoulution:  ')
 while True:
     vid = yt.streams.filter(res = choice,  progressive = True ).first()
