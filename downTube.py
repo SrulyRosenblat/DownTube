@@ -8,6 +8,8 @@ except:
 choice = input('enter the resoulution:  ')
 while True:
     vid = yt.streams.filter(res = choice,  progressive = True ).first()
+    if not vid:
+         vid = yt.streams.filter(res = choice + 'p',  progressive = True ).first()
     if vid:
         break
     choice = input('resoulution unavailable enter again:  ')
