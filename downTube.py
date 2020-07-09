@@ -1,6 +1,8 @@
 from pytube import YouTube
 from tkinter import *
 from PIL import ImageTk,Image
+import urllib.request
+import time
 import threading
 import re
 
@@ -8,38 +10,22 @@ YT = YouTube
 root= Tk()
 RES = StringVar(value='720p')
 FORMAT = StringVar(value='mp4')
+THREADS = []
+PIC = None
 frame = LabelFrame(root, padx=20,pady=50)
+FIRST_TIME = True
+
 
 def main():
     frame.pack(padx=0, pady=0)
     box = Entry(frame, width=100 )
     box.insert(0,'enter url:    ')
     box.grid(row=7, column=0, columnspan=4, padx=5, pady=20 )
-    t1 =threading.Thread(target=handshake_link, args=[box])
-    submit = Button(frame, text='check url',command=lambda:t1.start())
+    submit = Button(frame, text='check url',command=lambda:thread_manager(handshake_link,[box]))
     submit.grid(row=7,column=4)
-    
-    img = Image.open('gui/shaz.png').resize((300,200))
-    test_img = ImageTk.PhotoImage(img)
-    pic = Button(frame, image=test_img, command=download_time())
-    pic.image = test_img
-    pic.grid(row=0,column=2, columnspan =1, rowspan=6) 
+    photo_display('placeholder.png')
+    #thread_manager(thumbnail_changer,[])
      
-     
-   
-    
-    # choice = input('enter the resoulution:  ')
-    # while True:
-    #     vid = yt.streams.filter(res = choice,  progressive = True ).first()
-    #     if not vid:
-    #         vid = yt.streams.filter(res = choice + 'p',  progressive = True ).first()
-    #     if vid:
-    #         break
-    #     choice = input('resoulution unavailable enter again:  ')
-    # print('downloading..')
-    # vid.download(r'C:\Users\sruls\OneDrive\Desktop\yt-dl', yt.title)
-
-    # print('download complete of "' + yt.title + '"')
 def handshake_link(input_box):
     global YT
     haystack = input_box.get()
@@ -48,19 +34,21 @@ def handshake_link(input_box):
         link = re.search(search, haystack).group()
         print(link)
         YT = YouTube(link) 
-        print('linked')  
+        thumbnail_changer() 
         
     except:
         print('failed to conect to url')
     clearDisplay(input_box)
-    input_box.insert(0,'linking sucsesfull pick your res and click on image to download')
+    
     display_options()
+    input_box.insert(0,'linking sucsesfull pick your res and click on image to download')
+
 def display_options():
     
     rez = Label(frame,text='Resoulution:')
     rez.grid(row=0,column=3)
     pattern = '\"(\d+)p\"'
-    results = re.findall(pattern,str(YT.streams))
+    results = re.findall(pattern,str(YT.streams.filter(progressive=True)))
     
     results = list(map(int, results))
     results.sort(reverse=True)
@@ -75,7 +63,7 @@ def display_options():
         printed.append(resoulution) 
         
     download_options = [
-        'mp3','mp4'
+        'audio','mp4'
     ]
     dl = Label(frame, text='download:')
     dl.grid(row=0,column=0)
@@ -84,8 +72,44 @@ def display_options():
         x = Radiobutton(frame ,text=option,variable=FORMAT, value=option)
         x.grid(row=num, column= 0)
         num += 1
+    print(str(FORMAT))
+
 def download_time():
-    print(YT.streams)
+    print('im here')
+    if FORMAT.get() == 'mp4':
+        print('mp4')
+        vid = YT.streams.filter(res = RES.get(),  progressive = True ).first()
+        print('download started')
+        vid.download('./videos/')
+        print('download complete')
+    elif FORMAT.get() == 'audio':
+        audio = YT.streams.filter(only_audio=True).first()
+        print('download started')
+        audio.download('./videos/')
+        print('download complete')
+
+def thread_manager(target,args ,self_destruct=True ):
+    botbot = len(THREADS)
+    print('botbot' + str(botbot) + ' has joined the chat')
+
+    THREADS.append(threading.Thread(target=target, args=args , daemon=self_destruct)) 
+    THREADS[botbot].start()
+
+def thumbnail_changer():
+        urllib.request.urlretrieve(YT.thumbnail_url, 'gui/beep.jpg' )
+        photo_display('beep.jpg')
+
+def photo_display(fileName):
+    global FIRST_TIME
+    if not FIRST_TIME:
+        PIC.delete(0,END)
+    img = Image.open('gui/' + fileName).resize((300,200))
+    test_img = ImageTk.PhotoImage(img)
+    pic = Button(frame, image=test_img, command=lambda:thread_manager(download_time,[],False))
+    pic.image = test_img
+    pic.grid(row=0,column=2, columnspan =1, rowspan=6)
+    PIC = pic
+
 def clearDisplay(display):
     display.delete(0, END)
 
@@ -93,7 +117,4 @@ def clearDisplay(display):
 
 main()
 root.mainloop()
-# box = Entry(root, width=50)
-# box.insert(0,'enter your name')
-# box.pack()
-# Button(root, text='clickkkkkkkkkkk here!!!!!!!!!!!',command=onClick).pack()
+threading._shutdown()
