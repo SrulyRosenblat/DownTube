@@ -5,6 +5,9 @@ import urllib.request
 import time
 import threading
 import re
+from youtubesearchpython import SearchVideos
+
+
 
 YT = YouTube
 root= Tk()
@@ -29,26 +32,33 @@ def main():
     submit.grid(row=7,column=4)
     photo_display('youtube-logo.jpg')
     FIRST_TIME = False
-    #thread_manager(thumbnail_changer,[])
      
 def handshake_link():
     global YT
     submit.config(state=DISABLED)
     haystack = ENTRY_BOX.get()
-    search = "https://www.youtube.com/.*"
+    link = youtube_link(haystack)
     try:
-        link = re.search(search, haystack).group()
-        print(link)
-        YT = YouTube(link) 
+        if link:
+            YT = YouTube(link)
+           
+        else:
+            patern = ':(.+)'
+            text = re.findall(patern,ENTRY_BOX.get())
+            if text:
+                search = SearchVideos(text, offset = 1, mode = "list", max_results = 2)
+            else:
+                search = SearchVideos(ENTRY_BOX.get(), offset = 1, mode = "list", max_results = 2)
+            results = search.result()
+            YT = YouTube(results[0][2])
         thumbnail_changer() 
-        TEXT.set('connected to url pick your format / resoulution click thumbnail to download')
+        TEXT.set('connected to video pick your format / resoulution and then click thumbnail to download:')
     except:
-        TEXT.set('failed to conect to url')
+        TEXT.set('failed to conect to video enter again:')
     submit.config(state=NORMAL)
     display_options()
     
 def display_options():
-    
     pattern = '\"(\d+)p\"'
     streams = YT.streams.filter(progressive=True)
     results = re.findall(pattern,str(streams))
@@ -89,7 +99,6 @@ def download_time():
         vid.download('./videos/')
         PIC.config(state=NORMAL)
         TEXT.set('download complete')
-
     elif FORMAT.get() == 'audio':
         audio = YT.streams.filter(only_audio=True).first()
         TEXT.set('downloading..')
@@ -109,7 +118,6 @@ def thumbnail_changer():
     print(urllib.request.urlretrieve(YT.thumbnail_url, 'gui/beep.jpg' ))
     photo_display('beep.jpg')
    
-
 def photo_display(fileName):
     global FIRST_TIME
     global PIC
@@ -127,8 +135,13 @@ def photo_display(fileName):
 def clearDisplay(display):
     display.delete(0, END)
 
-
-
+def youtube_link(haystack):
+    search = "https://www.youtube.com/.*"
+    link = re.search(search, haystack)
+    if link == None:
+        return False
+    else:
+        return link.group()
 main()
 root.mainloop()
 threading._shutdown()
