@@ -29,27 +29,29 @@ submit = Button(frame, text='Enter',command=lambda:thread_manager(handshake_link
 
 def main():
     global FIRST_TIME
+    set_up_tkinter()
+    FIRST_TIME = False
+
+def set_up_tkinter():
     frame.pack(padx=0, pady=0)
     ENTRY_BOX.grid(row=7, column=0, columnspan=4, padx=5, pady=20 )
     submit.grid(row=7,column=4)
     photo_display('youtube-logo.jpg')
     thread_manager(target=download_ing)
-    FIRST_TIME = False
+    
 def handshake_link():
     global YT
+    # makes it so user cant click button
     submit.config(state=DISABLED)
-    haystack = ENTRY_BOX.get()
-    # if haystack.endswith(':'):
-    #     return
-    link = youtube_link(haystack)
+    link = text_box_search("https://www.youtube.com/.*")
     try:
         if link:
             YT = YouTube(link)
            
         else:
-            text = re.findall(':(.*)',ENTRY_BOX.get())
+            text = text_box_search(':(.*)')
             if text:
-                text2 = re.findall(':(.*\S)',ENTRY_BOX.get())
+                text2 = text_box_search(':(.*\S)')
                 if text2:
                     search = SearchVideos(text, offset = 1, mode = "list", max_results = 2)
                 else:
@@ -105,7 +107,7 @@ def download_time():
         vid = YT.streams.filter(res = RES.get(),  progressive = True ).first()
         DOWNLOADING = TRUE
         PIC.config(state=DISABLED)
-        vid.download('./videos/', 'The Search For D. B. Cooper')
+        vid.download('./videos/')
         
     elif FORMAT.get() == 'audio':
         audio = YT.streams.filter(only_audio=True).first()
@@ -123,7 +125,7 @@ def thread_manager(target,args=[] ,self_destruct=True ):
     THREADS[botbot].start()
 
 def thumbnail_changer():
-    print(urllib.request.urlretrieve(YT.thumbnail_url, 'gui/thumbnail.jpg' ))
+    urllib.request.urlretrieve(YT.thumbnail_url, 'gui/thumbnail.jpg' )
     photo_display('thumbnail.jpg')
    
 def photo_display(fileName):
@@ -146,13 +148,12 @@ def photo_display(fileName):
 def clearDisplay(display):
     display.delete(0, END)
 
-def youtube_link(haystack):
-    search = "https://www.youtube.com/.*"
-    link = re.search(search, haystack)
-    if link == None:
+def text_box_search(needle):
+    result = re.search(needle, ENTRY_BOX.get())
+    if result == None:
         return False
     else:
-        return link.group()
+        return result.group()
 
 def download_ing():
     while True:
