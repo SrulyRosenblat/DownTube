@@ -59,6 +59,7 @@ def handshake_link():
                     print('search empty')
                     return
             else:
+                # if user erased prompt
                 search = SearchVideos(ENTRY_BOX.get(), offset = 1, mode = "list", max_results = 2)
             results = search.result()
             YT = YouTube(results[0][2])
@@ -80,8 +81,10 @@ def display_options():
 
     rez = Label(frame,text='Resoulution:')
     rez.grid(row=0,column=3)
-    num = 1
+
     printed = []
+    #to count rows
+    num = 1
     for resoulution in results:
         if resoulution not in printed:
             x = Radiobutton(frame ,text=resoulution,variable=RES, value=resoulution)
@@ -95,6 +98,7 @@ def display_options():
     res_frame.grid(column=0,row=0)
     dl = Label(frame, text='download:')
     dl.grid(row=0,column=0)
+    # to count rows
     num = 1
     for option in download_options:
         x = Radiobutton(frame ,text=option,variable=FORMAT, value=option)
@@ -105,12 +109,14 @@ def download_time():
     global DOWNLOADING
     if FORMAT.get() == 'mp4':
         vid = YT.streams.filter(res = RES.get(),  progressive = True ).first()
+        # to start download animation
         DOWNLOADING = TRUE
         PIC.config(state=DISABLED)
         vid.download('./videos/')
         
     elif FORMAT.get() == 'audio':
         audio = YT.streams.filter(only_audio=True).first()
+        # to start download animation
         DOWNLOADING = TRUE
         PIC.config(state=DISABLED)
         audio.download('./videos/')
@@ -151,7 +157,7 @@ def clearDisplay(display):
 def text_box_search(needle):
     result = re.search(needle, ENTRY_BOX.get())
     if result == None:
-        return False
+        return None
     else:
         return result.group()
 
