@@ -16,14 +16,16 @@ root.title(' DownTube')
 root.resizable(0,0)
 RES = StringVar(value='720p')
 FORMAT = StringVar(value='mp4')
-TEXT = StringVar(value='enter url:    ')
+TEXT = StringVar(value='enter url or title:    ')
 THREADS = []
 PIC = None
 frame = LabelFrame(root, padx=20,pady=50)
 res_frame = LabelFrame(frame)
 FIRST_TIME = True
+DOWNLOADING = False
 ENTRY_BOX = Entry(frame, width=100, text=TEXT )
-submit = Button(frame, text='check url',command=lambda:thread_manager(handshake_link,[]))
+submit = Button(frame, text='Enter',command=lambda:thread_manager(handshake_link))
+
 
 def main():
     global FIRST_TIME
@@ -31,28 +33,35 @@ def main():
     ENTRY_BOX.grid(row=7, column=0, columnspan=4, padx=5, pady=20 )
     submit.grid(row=7,column=4)
     photo_display('youtube-logo.jpg')
+    thread_manager(target=download_ing)
     FIRST_TIME = False
-     
 def handshake_link():
     global YT
     submit.config(state=DISABLED)
     haystack = ENTRY_BOX.get()
+    # if haystack.endswith(':'):
+    #     return
     link = youtube_link(haystack)
     try:
         if link:
             YT = YouTube(link)
            
         else:
-            patern = ':(.+)'
-            text = re.findall(patern,ENTRY_BOX.get())
+            text = re.findall(':(.*)',ENTRY_BOX.get())
             if text:
-                search = SearchVideos(text, offset = 1, mode = "list", max_results = 2)
+                text2 = re.findall(':(.*\S)',ENTRY_BOX.get())
+                if text2:
+                    search = SearchVideos(text, offset = 1, mode = "list", max_results = 2)
+                else:
+                    submit.config(state=NORMAL)
+                    print('search empty')
+                    return
             else:
                 search = SearchVideos(ENTRY_BOX.get(), offset = 1, mode = "list", max_results = 2)
             results = search.result()
             YT = YouTube(results[0][2])
         thumbnail_changer() 
-        TEXT.set('connected to video pick your format / resoulution and then click thumbnail to download:')
+        TEXT.set('connected to video, pick your format / resoulution and then click thumbnail to download:')
     except:
         TEXT.set('failed to conect to video enter again:')
     submit.config(state=NORMAL)
@@ -89,34 +98,33 @@ def display_options():
         x = Radiobutton(frame ,text=option,variable=FORMAT, value=option)
         x.grid(row=num, column= 0)
         num += 1
-    print(str(FORMAT))
     
 def download_time():
+    global DOWNLOADING
     if FORMAT.get() == 'mp4':
         vid = YT.streams.filter(res = RES.get(),  progressive = True ).first()
-        TEXT.set('downloading..')
+        DOWNLOADING = TRUE
         PIC.config(state=DISABLED)
-        vid.download('./videos/')
-        PIC.config(state=NORMAL)
-        TEXT.set('download complete')
+        vid.download('./videos/', 'The Search For D. B. Cooper')
+        
     elif FORMAT.get() == 'audio':
         audio = YT.streams.filter(only_audio=True).first()
-        TEXT.set('downloading..')
+        DOWNLOADING = TRUE
         PIC.config(state=DISABLED)
         audio.download('./videos/')
-        PIC.config(state=NORMAL)
-        TEXT.set('download complete')
+    PIC.config(state=NORMAL)
+    DOWNLOADING = False
+    TEXT.set('download complete')
 
-def thread_manager(target,args ,self_destruct=True ):
+def thread_manager(target,args=[] ,self_destruct=True ):
     botbot = len(THREADS)
     print('botbot' + str(botbot) + ' has joined the chat')
-
     THREADS.append(threading.Thread(target=target, args=args , daemon=self_destruct)) 
     THREADS[botbot].start()
 
 def thumbnail_changer():
-    print(urllib.request.urlretrieve(YT.thumbnail_url, 'gui/beep.jpg' ))
-    photo_display('beep.jpg')
+    print(urllib.request.urlretrieve(YT.thumbnail_url, 'gui/thumbnail.jpg' ))
+    photo_display('thumbnail.jpg')
    
 def photo_display(fileName):
     global FIRST_TIME
@@ -126,9 +134,12 @@ def photo_display(fileName):
         instruction = Label(frame, text='click on thumbnail to download:')
         instruction.grid(row=0, column=2)
     img = Image.open('gui/' + fileName).resize((300,200))
-    test_img = ImageTk.PhotoImage(img)
-    pic = Button(frame, image=test_img, command=lambda:thread_manager(download_time,[],False))
-    pic.image = test_img
+    if DOWNLOADING:
+        pass
+    else:
+        thumbnail = ImageTk.PhotoImage(img)
+    pic = Button(frame, image=thumbnail, command=lambda:thread_manager(download_time,[],False))
+    pic.image = thumbnail
     pic.grid(row=1,column=2, columnspan =1, rowspan=6)
     PIC = pic
 
@@ -142,6 +153,17 @@ def youtube_link(haystack):
         return False
     else:
         return link.group()
+
+def download_ing():
+    while True:
+        time.sleep(1)
+        while DOWNLOADING:
+            TEXT.set('Downloading.')
+            time.sleep(.5) 
+            if DOWNLOADING:
+                TEXT.set('Downloading...')
+                time.sleep(.5)
+                
 main()
 root.mainloop()
 threading._shutdown()
