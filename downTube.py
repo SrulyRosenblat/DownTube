@@ -171,6 +171,7 @@ def download_ing():
                 TEXT.set('Downloading...')
                 time.sleep(.5)
                 
-main()
-root.mainloop()
-threading._shutdown()
+if __name__ == "__main__":              
+    main()
+    root.mainloop()
+    threading._shutdown()
