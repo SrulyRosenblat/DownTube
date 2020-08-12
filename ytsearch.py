@@ -1,17 +1,20 @@
 from googleapiclient.discovery import build
+import key
 
 
 def main():
-    yt = youtubeConnect(key.key)
-    vids = yt.video_search(input('enter video: '))
-    for vid in vids:
-        print(vid.title + ' ' + vid.url)
+    YT = youtubeConnect(key.key)
+    playlists = YT.playlist_search('never ending story') 
+    for playlist in playlists:
+        print(playlist.title)
+        for vid in playlist.videos:
+            print(vid.title)
         
 class videoobject():
     '''
     takes a youtube api video object as a input and outputs cleaned up data
     '''
-    def __init__(self,video, thumbnailQuality='medium', playlistid=None):
+    def __init__(self,video, thumbnailQuality='medium'):
         videoInfo = video['snippet']
         thumbnail = videoInfo['thumbnails']
         self.url = 'https://www.youtube.com/watch?v=' + video['id']
@@ -19,7 +22,11 @@ class videoobject():
         self.description = videoInfo['description']
         self.date = videoInfo['publishedAt']
         self.channel = videoInfo['channelTitle']
-        self.playlistid = playlistid
+        try :
+            self.playlistid = video['playlistId']
+        except:
+            self.playlistId = None
+    
         try:
             self.thumbnailLink = thumbnail[thumbnailQuality]['url']
             self.thumbnailWidth = thumbnail[thumbnailQuality]['width']
@@ -32,14 +39,48 @@ class videoobject():
 
     def __str__(self):
         return f'title: {self.title},\nurl: {self.url},\ndescription: {self.description},\ndate: {self.date},\nchannel: {self.channel},\nthumbnailLink: {self.thumbnailLink},\nthumbnailWidth: {self.thumbnailWidth},\nthumbnailHeight: {self.thumbnailHeight}'
+
+
+class playlistobject():
+    '''
+    takes a youtube api playlist id object as a input and outputs cleaned up data
+    '''
+    def __init__(self,playlist,thumbnailQuality = 'medium'):
+        yt = youtubeConnect(key.key)
+        self.id = playlist['id']['playlistId']
+        playlistInfo = playlist['snippet']
+        self.title = playlistInfo['title']
+        self.description = playlistInfo['description']
+        self.channel = playlistInfo['channelTitle']
+        self.date = playlistInfo['publishedAt']
+        thumbnail = playlistInfo['thumbnails']
+        try:
+            self.thumbnailLink = thumbnail[thumbnailQuality]['url']
+            self.thumbnailWidth = thumbnail[thumbnailQuality]['width']
+            self.thumbnailHeight = thumbnail[thumbnailQuality]['height']
+        except:
+            print(f"Thumbnail quality {thumbnailQuality} is unavailible defaulted to 'default' availible options are: 'default', 'medium', 'high'")
+            self.thumbnailLink = thumbnail['default']['url']
+            self.thumbnailWidth = thumbnail['default']['width']
+            self.thumbnailHeight = thumbnail['default']['height']
+        self.videos = []
+        request = yt.api.playlistItems().list(part="snippet",maxResults=30,playlistId=self.id)
+        self.videoCount = 0
+        for vidInfo in request.execute()['items']:
+            video = yt.video_by_url(vidInfo['snippet']['resourceId']['videoId'])
+            self.videos.append(video) 
+            self.videoCount += 1
+
+        
+    def __str__(self):
+        return f'title: {self.title},\nid: {self.id}\ndescription: {self.description},\ndate: {self.date},\nchannel: {self.channel},\nthumbnailLink: {self.thumbnailLink},\nthumbnailWidth: {self.thumbnailWidth},\nthumbnailHeight: {self.thumbnailHeight},\nvideoCount: {self.videoCount}'
 class youtubeConnect():
 
     def __init__(self,key):
         '''
         add a youtube api key and connect to the api
         '''
-        self.key = key
-        self.api = build('youtube','v3', developerKey=self.key)
+        self.api = build('youtube','v3', developerKey=key)
         
     def channel_info(self, username, info = 'statistics' ):
         '''
@@ -76,24 +117,12 @@ class youtubeConnect():
         '''
         returns a list of playlists based off the querry
         '''
-        # playlistList = self.api.search().list(part="snippet",q="pizza",type="playlist").execute()['items']
-        # playlistIds = [x['id']['playlistId'] for x in playlistList]
-        # playlistsVidIds = []
-        # count = 0
-        # for playId in playlistIds:
-        #     vidIds = []
-        #     vidIds.append(playlistList[count])
-        #     for vid in self.api.playlistItems().list(part="contentDetails", playlistId = playId ).execute()['items']:
-        #         vidIds.append(vid['contentDetails']['videoId']) 
-        #     playlistsVidIds.append(vidIds)
-        #     count += 1
-
-        # for playlist in playlistsVidIds:
-        #     videos = []
-        #     for video in self.api.videos().list(part="snippet",id=playlist[1:]).execute()['items']:
-        #        videos.append(videoobject(video)) 
-        #     yield playlist[0] , videos
-        pass
+        request = self.api.search().list(part="snippet",q="never ending story",type="playlist")
+        response = request.execute()
+        playists = []
+        for playlist in response['items']:
+            playists.append(playlistobject(playlist))
+        return playists
 
 
 if __name__ == "__main__":
