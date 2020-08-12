@@ -6,15 +6,15 @@ def main():
     YT = youtubeConnect(key.key)
     playlists = YT.playlist_search('minecraft',limit=4,maxVidsInPL=50) 
     for playlist in playlists:
-        print(playlist.title)
-        print(playlist.videoCount)
+        for video in playlist:
+            print(video.playlistid)
         
         
 class videoobject():
     '''
     takes a youtube api video object as a input and outputs cleaned up data
     '''
-    def __init__(self,video, thumbnailQuality='medium'):
+    def __init__(self,video, thumbnailQuality='medium',playlistid = None):
         videoInfo = video['snippet']
         thumbnail = videoInfo['thumbnails']
         self.url = 'https://www.youtube.com/watch?v=' + video['id']
@@ -22,10 +22,6 @@ class videoobject():
         self.description = videoInfo['description']
         self.date = videoInfo['publishedAt']
         self.channel = videoInfo['channelTitle']
-        try :
-            self.playlistid = video['playlistId']
-        except:
-            self.playlistId = None
     
         try:
             self.thumbnailLink = thumbnail[thumbnailQuality]['url']
@@ -69,6 +65,7 @@ class playlistobject():
         for vidInfo in request.execute()['items']:
             video = yt.video_by_url(vidInfo['snippet']['resourceId']['videoId'])
             if video:
+                video.playlistid = self.id
                 self.videos.append(video) 
                 self.videoCount += 1
 
@@ -85,16 +82,6 @@ class youtubeConnect():
         add a youtube api key and connect to the api
         '''
         self.api = build('youtube','v3', developerKey=key)
-        
-    def channel_info(self, username, info = 'statistics' ):
-        '''
-        get channel info in the form of dictionery
-        '''
-        data = self.api.channels().list(
-            part = info,
-            forUsername = username
-        )
-        pass
 
 
     def video_by_url(self, url):
