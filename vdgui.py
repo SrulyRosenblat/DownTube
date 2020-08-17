@@ -17,25 +17,39 @@ class videoDownloaderGui(QMainWindow):
         self.setCentralWidget(central)
         self.grid = QGridLayout()
         self.grid.setAlignment(Qt.AlignCenter)
+        self.statusBar = QStatusBar()
+        self.setStatusBar(self.statusBar)
         self.setupGui()
         central.setLayout(self.grid)
         
         
     def setupGui(self):
+        mainMenu = self.menuBar()
+
+        fileMenu = mainMenu.addMenu('&File')
+        fileLocation = QAction("&file locaition", self)
+        fileLocation.setShortcut("Ctrl+F")
+        fileLocation.setStatusTip('set the file location for videos')
+        fileMenu.addAction(fileLocation)
+        
+
         slider = QSlider(Qt.Vertical)
         slider.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
         slider.setCursor(QCursor(Qt.OpenHandCursor))
+        slider.setStatusTip('pick your resoulution')
        # slider.sliderMoved(lambda:slider.setCursor(QCursor(Qt.ClosedHandCursor)))
         #slider.sliderMoved(lambda:slider.setCursor(QCursor(Qt.OpenHandCursor)))
 
         description = QTextBrowser()
         description.setText('rtgkeirjguermjmetuijmgiu\njguiwrhnuignwuhnuhn\nuj4wtjiu4hju8qh8h')
         description.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
+        description.setStatusTip('the description of the current video')
 
         searchbar = QLineEdit()
         searchbar.setPlaceholderText('search for video or enter url')
         searchbar.setStyleSheet("border: 2px solid black;border-radius: 10px;font-size: 36px;")
         searchbar.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred))
+        searchbar.setStatusTip('search for a video')
     
 
         downloadbtn = QPushButton()
@@ -43,28 +57,34 @@ class videoDownloaderGui(QMainWindow):
         downloadbtn.setStyleSheet('background-color: rgb(0, 85, 255); border: 1px solid black;border-radius: 10px;font-size: 30px;color: white;padding: 5px 15px;')
         downloadbtn.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred))
         downloadbtn.setCursor(QCursor(Qt.PointingHandCursor))
+        downloadbtn.setStatusTip('download the current video')
 
         backbtn = QPushButton()
         backbtn.setText('<<<')
         backbtn.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred))
         backbtn.setCursor(QCursor(Qt.PointingHandCursor))
+        backbtn.setStatusTip('go to last video')
         
         nextbtn = QPushButton()
         nextbtn.setText('>>>')
         nextbtn.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred))
         nextbtn.setCursor(QCursor(Qt.PointingHandCursor))
+        nextbtn.setStatusTip('go to next video')
 
         picture = QLabel()
         img = QPixmap('./gui/thumbnail.jpg')
         img = img.scaled(1280,720, Qt.KeepAspectRatio)
         picture.setPixmap(img)
+        picture.setStatusTip('the thumbnail of the video selected')
 
         title = QLabel()
         title.setText('oppo finally did it')
+        title.setStatusTip('the title of the selected video')
 
         videoType = QComboBox()
         videoType.addItems(['video and audio', 'audio only'])
         videoType.setCursor(QCursor(Qt.PointingHandCursor))
+        videoType.setStatusTip('pick your download format')
 
         searchbarSpacer = QSpacerItem(20, 60, QSizePolicy.Minimum, QSizePolicy.Maximum)
         descriptionSpacer = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
