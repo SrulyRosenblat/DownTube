@@ -14,7 +14,7 @@ class videoobject():
     '''
     takes a youtube api video object as a input and outputs cleaned up data
     '''
-    def __init__(self,video, thumbnailQuality='medium',playlistid = None):
+    def __init__(self,video, thumbnailQuality='high',defultQuality = 'medium'):
         videoInfo = video['snippet']
         thumbnail = videoInfo['thumbnails']
         self.url = 'https://www.youtube.com/watch?v=' + video['id']
@@ -28,20 +28,20 @@ class videoobject():
             self.thumbnailWidth = thumbnail[thumbnailQuality]['width']
             self.thumbnailHeight = thumbnail[thumbnailQuality]['height']
         except:
-            print(f"Thumbnail quality {thumbnailQuality} is unavailible defaulted to 'default' availible options are: 'default', 'medium', 'high', 'maxres' ")
+            print(f"Thumbnail quality {thumbnailQuality} is unavailible defaulted to {defultQuality} availible options are: 'default', 'medium', 'high', 'maxres' ")
             self.thumbnailLink = thumbnail['default']['url']
             self.thumbnailWidth = thumbnail['default']['width']
             self.thumbnailHeight = thumbnail['default']['height']
 
     def __str__(self):
-        return f'title: {self.title},\nurl: {self.url},\ndescription: {self.description},\ndate: {self.date},\nchannel: {self.channel},\nthumbnailLink: {self.thumbnailLink},\nthumbnailWidth: {self.thumbnailWidth},\nthumbnailHeight: {self.thumbnailHeight}'
+        return f'title: {self.title},\nurl: {self.url},\ndescription: {self.description [:40] + "..."},\ndate: {self.date},\nchannel: {self.channel},\nthumbnailLink: {self.thumbnailLink},\nthumbnailWidth: {self.thumbnailWidth},\nthumbnailHeight: {self.thumbnailHeight}'
 
 
 class playlistobject():
     '''
     takes a youtube api playlist object as a input and outputs cleaned up data
     '''
-    def __init__(self,playlist,thumbnailQuality = 'medium',maxVideos=50):
+    def __init__(self,playlist,thumbnailQuality = 'high',defultQuality = 'medium',maxVideos=50):
         yt = youtubeConnect(key.key)
         self.id = playlist['id']['playlistId']
         playlistInfo = playlist['snippet']
@@ -65,7 +65,6 @@ class playlistobject():
         for vidInfo in request.execute()['items']:
             video = yt.video_by_url(vidInfo['snippet']['resourceId']['videoId'])
             if video:
-                video.playlistid = self.id
                 self.videos.append(video) 
                 self.videoCount += 1
 
@@ -84,7 +83,7 @@ class youtubeConnect():
         self.api = build('youtube','v3', developerKey=key)
 
 
-    def video_by_url(self, url):
+    def video_by_url(self, url,thumbnailQuality = 'high',defultQuality = 'medium'):
         '''
         get video by the video url
         '''
@@ -93,10 +92,10 @@ class youtubeConnect():
         except:
             print(f'the video with the id {url} is unavailible perhaps its private')
             return False
-        return videoobject(video)
+        return videoobject(video,thumbnailQuality = 'high',defultQuality = 'medium')
 
 
-    def video_search(self,querry,limit=3):
+    def video_search(self,querry,limit=3,thumbnailQuality = 'high',defultQuality = 'medium'):
         '''
         returns a list of videos that match querry on youtube
         '''
@@ -105,11 +104,11 @@ class youtubeConnect():
         for videoData in data.execute()['items']:
             videoUrl = videoData['id']['videoId']
             video = self.video_by_url(videoUrl)
-            li.append(video)
+            li.append(video,thumbnailQuality = 'high',defultQuality = 'medium')
         return li
 
 
-    def playlist_search(self,querry, limit=1,maxVidsInPL=20):
+    def playlist_search(self,querry, limit=1,maxVidsInPL=20,thumbnailQuality = 'high',defultQuality = 'medium'):
         '''
         returns a list of playlists that match querry on youtube
         '''
@@ -117,7 +116,7 @@ class youtubeConnect():
         response = request.execute()
         playlists = []
         for playlist in response['items']:
-            playlists.append(playlistobject(playlist,maxVideos=maxVidsInPL))
+            playlists.append(playlistobject(playlist,maxVideos=maxVidsInPL,thumbnailQuality = 'high',defultQuality = 'medium'))
         return playlists
 
 
