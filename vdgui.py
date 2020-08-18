@@ -7,6 +7,7 @@ import ytsearch
 import key
 from urllib.request import urlretrieve
 import time
+from pytube import YouTube
 class videoDownloaderGui(QMainWindow):
     def __init__(self, parent=None):
         '''
@@ -66,6 +67,7 @@ class videoDownloaderGui(QMainWindow):
         self.downloadbtn.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred))
         self.downloadbtn.setCursor(QCursor(Qt.PointingHandCursor))
         self.downloadbtn.setStatusTip('download the current video')
+        self.downloadbtn.clicked.connect(self.downloadVideo)
 
         self.backbtn = QPushButton()
         self.backbtn.setText('<<<')
@@ -88,7 +90,6 @@ class videoDownloaderGui(QMainWindow):
         img = QPixmap('./gui/youtube-logo.jpg')
         img = img.scaled(1280,720)
         self.picture.setPixmap(img)
-        #self.picture.setSizePolicy(QSizePolicy.Fixed,QSizePolicy.Fixed)
         self.picture.setStatusTip('the thumbnail of the video selected')
 
         self.titleDisplay = QLabel()
@@ -117,6 +118,8 @@ class videoDownloaderGui(QMainWindow):
         self.grid.addItem(descriptionSpacer,3,11,0,3)
         self.grid.addWidget(self.description,3,14,4,3)
         self.grid.addWidget(slider,4,0,3,4)
+
+
     def searchVids(self):
         self.videos = self.api.video_search(self.searchbar.text(),limit=5,thumbnailQuality='maxres',defultQuality='high')
         self.downloadThumbnails()
@@ -155,6 +158,12 @@ class videoDownloaderGui(QMainWindow):
             self.backbtn.setEnabled(True)
             self.nextbtn.setEnabled(True)
         self.setVideo()
+    
+    def downloadVideo(self):
+        print('downloading' + self.videos[self.index].url)
+        yt = YouTube(self.videos[self.index].url)
+        vid = yt.streams.filter(progressive=True).first()
+        vid.download('./videos')
         
 app = QApplication(sys.argv)
 window = videoDownloaderGui()
