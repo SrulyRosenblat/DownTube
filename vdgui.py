@@ -8,6 +8,7 @@ import key
 from urllib.request import urlretrieve
 import time
 from pytube import YouTube
+
 class videoDownloaderGui(QMainWindow):
     def __init__(self, parent=None):
         '''
@@ -23,6 +24,8 @@ class videoDownloaderGui(QMainWindow):
         self.api = ytsearch.youtubeConnect(key.key)
         self.index = 0
         self.videos = []
+        self.status = []
+        self.botbots = []
         self.grid = QGridLayout()
         self.grid.setAlignment(Qt.AlignCenter)
         
@@ -48,7 +51,7 @@ class videoDownloaderGui(QMainWindow):
         #slider.sliderMoved(lambda:slider.setCursor(QCursor(Qt.OpenHandCursor)))
 
         self.description = QTextBrowser()
-        self.description.setText('rtgkeirjguermjmetuijmgiu\njguiwrhnuignwuhnuhn\nuj4wtjiu4hju8qh8h')
+        self.description.setText('description:\ntype somthing in to look for videos\nenjoy ( :')
         self.description.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
         self.description.setStatusTip('the description of the current video')
 
@@ -62,7 +65,8 @@ class videoDownloaderGui(QMainWindow):
 
         self.downloadbtn = QPushButton()
         self.downloadbtn.setText('Download')
-        self.downloadbtn.setStyleSheet('QPushButton {background-color: rgb(0, 85, 255); border: 1px solid black;border-radius: 10px;font-size: 30px;color: white;padding: 5px 15px;}''QPushButton:pressed { background-color: gray }''QPushButton:hover { background-color: skyblue }')#''QPushButton:pressed { background-color: gray }'
+        self.downloadbtn.setStyleSheet('QPushButton {background-color: darkgray; border: 1px solid black;border-radius: 10px;font-size: 30px;color: white;padding: 5px 15px;}')
+        self.downloadbtn.setEnabled(False)
  
         self.downloadbtn.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred))
         self.downloadbtn.setCursor(QCursor(Qt.PointingHandCursor))
@@ -93,8 +97,7 @@ class videoDownloaderGui(QMainWindow):
         self.picture.setStatusTip('the thumbnail of the video selected')
 
         self.titleDisplay = QLabel()
-        self.titleDisplay
-        self.titleDisplay.setText('oppo finally did it')
+        self.titleDisplay.setText('search for a video')
         self.titleDisplay.setStatusTip('the title of the selected video')
 
         self.videoType = QComboBox()
@@ -122,11 +125,15 @@ class videoDownloaderGui(QMainWindow):
 
     def searchVids(self):
         self.videos = self.api.video_search(self.searchbar.text(),limit=5,thumbnailQuality='maxres',defultQuality='high')
-        self.downloadThumbnails()
-        self.setVideo()
-        if not self.index + 1 >= len(self.videos):
-            self.nextbtn.setEnabled(True)
-
+        if len(self.videos) >= 1:
+            self.status = ['download' for x in self.videos]
+            self.downloadThumbnails()
+            self.setVideo()
+            if not self.index + 1 >= len(self.videos):
+                self.nextbtn.setEnabled(True)
+        else:
+            self.searchbar.setText('')
+            self.searchbar.setPlaceholderText('no videos availible that match the search') 
     def downloadThumbnails(self):        
         count = 0
         for vid in self.videos:
@@ -139,6 +146,8 @@ class videoDownloaderGui(QMainWindow):
         self.picture.setPixmap(img)
         self.description.setText(self.videos[self.index].description)
         self.setTitleText(self.videos[self.index].title)
+        self.downloadBtnSetup()
+        
 
     def setTitleText(self,text):
         if len(text) >= 40:
@@ -157,14 +166,44 @@ class videoDownloaderGui(QMainWindow):
         else:
             self.backbtn.setEnabled(True)
             self.nextbtn.setEnabled(True)
+
         self.setVideo()
     
+    def downloadBtnSetup(self):
+        state = self.status[self.index]
+
+        if state == 'downloading':
+            bgColor = 'darkgray'
+            bgColorHover = 'gray'
+            bgColorPressed = 'light gray'
+            self.downloadbtn.setEnabled(False)
+        elif  state == 'downloaded':
+            bgColor = 'gray'
+            bgColorHover = 'lightgray'
+            bgColorPressed = 'lightgray'
+            self.downloadbtn.setEnabled(True)
+ 
+        elif state == 'download':
+            bgColor = 'rgb(0, 85, 255)'
+            bgColorHover = 'rgb(89, 111, 255)'
+            bgColorPressed = 'lightblue'
+            self.downloadbtn.setEnabled(True)
+
+        self.downloadbtn.setStyleSheet('QPushButton {background-color: %s; border: 1px solid black;border-radius: 10px;font-size: 30px;color: white;padding: 5px 15px;}''QPushButton:pressed { background-color: %s }''QPushButton:hover { background-color: %s }'%(bgColor,bgColorPressed,bgColorHover) )
+        
+        #self.downloadbtn.setEnabled(False)
+        
+    
     def downloadVideo(self):
+        self.status[self.index] = 'downloading'
+        self.downloadBtnSetup()
         print('downloading' + self.videos[self.index].url)
         yt = YouTube(self.videos[self.index].url)
         vid = yt.streams.filter(progressive=True).first()
         vid.download('./videos')
-        
+        self.status[self.index] = 'downloaded'
+        self.downloadBtnSetup()
+    
 app = QApplication(sys.argv)
 window = videoDownloaderGui()
 window.show()
