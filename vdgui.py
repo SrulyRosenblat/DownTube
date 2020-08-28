@@ -1,6 +1,6 @@
 
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QCursor , QPixmap
+from PyQt5.QtGui import QCursor , QPixmap, QIcon
 from PyQt5.QtCore import Qt, QThreadPool
 import sys
 import functools
@@ -11,6 +11,7 @@ from pytube import YouTube
 from worker import Worker, makebot
 import time
 from functools import partial
+import os
 class videoDownloaderGui(QMainWindow):
     def __init__(self, parent=None):
         '''
@@ -19,6 +20,7 @@ class videoDownloaderGui(QMainWindow):
         super().__init__(parent)
         self.setGeometry(100, 100, 2000, 1250)
         self.setWindowTitle('DownTube')
+        self.setWindowIcon(QIcon(resource_path('./gui/py.png')))
         central = QWidget()
         self.setCentralWidget(central)
         self.statusBar = QStatusBar()
@@ -49,6 +51,7 @@ class videoDownloaderGui(QMainWindow):
         fileLocation = QAction("&file locaition", self)
         fileLocation.setShortcut("Ctrl+F")
         fileLocation.setStatusTip('set the file location for videos')
+        fileLocation.triggered.connect(self.showdialog)
         resoulutionMenu = mainMenu.addMenu('&resoulution')
         for res in ['360p','720p']:
             resoulution = QAction(f"&{res}", self)
@@ -97,7 +100,7 @@ class videoDownloaderGui(QMainWindow):
         
 
         self.picture = QLabel()
-        img = QPixmap('./gui/youtube-logo.jpg')
+        img = QPixmap(resource_path('./gui/youtube-logo.jpg'))
         img = img.scaled(1280,720)
         self.picture.setPixmap(img)
         self.picture.setStatusTip('the thumbnail of the video selected')
@@ -151,10 +154,18 @@ class videoDownloaderGui(QMainWindow):
         self.grid.addItem(descriptionSpacer,8,14,rowSpan=1,columnSpan=4)
         self.grid.addWidget(self.description,3,14,4,3)
         self.grid.addLayout(self.progressGrid,4,0,3,4)
+        self.showdialog()
     
+    def showdialog(self):
+        d = QDialog()
+        b1 = QPushButton("ok",d)
+        b1.move(50,50)
+        d.setWindowTitle("Dialog")
+        d.setWindowModality(Qt.ApplicationModal)
+        d.exec_()
+
     def connectToApi(self):
         self.api = ytsearch.youtubeConnect(key.key)
-
 
     def setRes(self,resoulution):
         self.resolution = resoulution
@@ -185,11 +196,10 @@ class videoDownloaderGui(QMainWindow):
         self.searchbar.setPlaceholderText('no videos availaible that match the search')
         self.nextbtn.setEnabled(False)
         self.backbtn.setEnabled(False)
-        img = QPixmap('./gui/empty.jpg')
+        img = QPixmap(resource_path('./gui/empty.jpg'))
         img = img.scaled(1280,720)
         self.picture.setPixmap(img)
-        self.downloadBtnSetup(state='empty')
-        
+        self.downloadBtnSetup(state='empty') 
 
     def downloadThumbnails(self):        
         '''
@@ -204,7 +214,7 @@ class videoDownloaderGui(QMainWindow):
         '''
         set up the gui based on the current video
         '''
-        img = QPixmap(f'gui/thumbnails/thumbnail{self.index}.jpg')
+        img = QPixmap(resource_path(f'gui/thumbnails/thumbnail{self.index}.jpg') )
         img = img.scaled(1280,720,transformMode=Qt.FastTransformation)
         self.picture.setPixmap(img)
         self.description.setText(self.videos[self.index].description)
@@ -277,6 +287,8 @@ class videoDownloaderGui(QMainWindow):
  
         self.downloadbtn.setStyleSheet('QPushButton {background-color: %s; border: 1px solid black;border-radius: 10px;font-size: 30px;color: white;padding: 5px 15px;}''QPushButton:pressed { background-color: %s }''QPushButton:hover { background-color: %s }'%(bgColor,bgColorPressed,bgColorHover) )
         
+
+
     def downloadVideo(self):
         '''
         downloads video that is currently selected
@@ -290,7 +302,7 @@ class videoDownloaderGui(QMainWindow):
             try:
                 yt = YouTube(video.url,on_progress_callback=self.progress_func)
                 vid = yt.streams.filter(res=self.resolution,progressive=True).first()
-                vid.download('./videos')
+                vid.download(addToPath(findDesktop(),'/videos') )
                 self.status[index] = 'downloaded'
                 print('download complete')
                 return
@@ -350,6 +362,32 @@ class videoDownloaderGui(QMainWindow):
         '''
         self.bot = makebot(func,*args,**kwargs) 
         self.startbot(self.bot)
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+def addToPath(path,newPath):
+    '''
+    adds a folder to path
+    '''
+    return os.path.normpath(path + newPath)
+
+def findDesktop():
+    '''
+    finds the appropiate desktop
+    '''
+    desktop = os.path.normpath(os.path.expanduser("~/OneDrive/Desktop"))
+    if os.path.exists(desktop):
+        return desktop
+    else:
+        return os.path.normpath(os.path.expanduser("~/Desktop"))
 
 app = QApplication(sys.argv)
 window = videoDownloaderGui()
