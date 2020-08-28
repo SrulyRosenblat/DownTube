@@ -40,16 +40,10 @@ class videoDownloaderGui(QMainWindow):
         self.grid.setAlignment(Qt.AlignCenter)
         self.api = None
         self.resolution = '720p'
-        self.setupGui()
         central.setLayout(self.grid)
-        self.makeAndSendBot(self.connectToApi)
-        
 
-  
-    def setupGui(self):
-        '''
-        does pretty much everything
-        '''
+        self.makeAndSendBot(self.connectToApi)
+
         mainMenu = self.menuBar()
         fileMenu = mainMenu.addMenu('&File')
         fileLocation = QAction("&file locaition", self)
@@ -316,7 +310,6 @@ class videoDownloaderGui(QMainWindow):
         '''
         stream,progress = info
         if stream not in self.downloading:
-            print(stream)
             self.downloadCounter += 1
             self.downloading[stream] = self.downloadCounter % 10
             index = self.downloading[stream]
