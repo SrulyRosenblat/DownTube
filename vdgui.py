@@ -18,7 +18,7 @@ class videoDownloaderGui(QMainWindow):
         '''
         super().__init__(parent)
         self.setGeometry(100, 100, 2000, 1250)
-        self.setWindowTitle('youtube downloader')
+        self.setWindowTitle('DownTube')
         central = QWidget()
         self.setCentralWidget(central)
         self.statusBar = QStatusBar()
@@ -173,10 +173,23 @@ class videoDownloaderGui(QMainWindow):
             self.setVideo()
             if not self.index + 1 >= len(self.videos):
                 self.nextbtn.setEnabled(True)
+            self.searchbar.setPlaceholderText('search for video or enter url')
         else:
-            self.searchbar.setText('')
-            self.searchbar.setPlaceholderText('no videos availaible that match the search')
-            # todo make it not crash here
+            self.emptySearch()
+
+    def emptySearch(self):
+        '''
+        sets up a empty search gui
+        '''
+        self.searchbar.setText('')
+        self.searchbar.setPlaceholderText('no videos availaible that match the search')
+        self.nextbtn.setEnabled(False)
+        self.backbtn.setEnabled(False)
+        img = QPixmap('./gui/empty.jpg')
+        img = img.scaled(1280,720)
+        self.picture.setPixmap(img)
+        self.downloadBtnSetup(state='empty')
+        
 
     def downloadThumbnails(self):        
         '''
@@ -224,11 +237,12 @@ class videoDownloaderGui(QMainWindow):
 
         self.setVideo()
     
-    def downloadBtnSetup(self):
+    def downloadBtnSetup(self,state=None):
         '''
         sets up the download bar based on the currently selected video
         '''
-        state = self.status[self.index]
+        if  not state:
+            state = self.status[self.index]
 
         if state == 'downloading':
             self.downloadbtn.setText('Downloading..')
@@ -242,13 +256,18 @@ class videoDownloaderGui(QMainWindow):
             bgColorHover = 'lightgray'
             bgColorPressed = 'lightgray'
             self.downloadbtn.setEnabled(True)
- 
         elif state == 'download':
             self.downloadbtn.setText('Download')
             bgColor = 'rgb(0, 85, 255)'
             bgColorHover = 'rgb(89, 111, 255)'
             bgColorPressed = 'lightblue'
             self.downloadbtn.setEnabled(True)
+        elif state == 'empty':
+            self.downloadbtn.setText('Download')
+            bgColor = 'darkgray'
+            bgColorHover = 'gray'
+            bgColorPressed = 'light gray'
+            self.downloadbtn.setEnabled(False)
         elif state == 'error':
             self.downloadbtn.setText('Download Failed')
             bgColor = 'red'
@@ -256,7 +275,6 @@ class videoDownloaderGui(QMainWindow):
             bgColorPressed = 'darkred'
             self.downloadbtn.setEnabled(True)
  
-
         self.downloadbtn.setStyleSheet('QPushButton {background-color: %s; border: 1px solid black;border-radius: 10px;font-size: 30px;color: white;padding: 5px 15px;}''QPushButton:pressed { background-color: %s }''QPushButton:hover { background-color: %s }'%(bgColor,bgColorPressed,bgColorHover) )
         
     def downloadVideo(self):
