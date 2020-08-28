@@ -26,13 +26,15 @@ class videoDownloaderGui(QMainWindow):
         self.index = 0
         self.videos = []
 
+        self.downloadCounter = 0
         self.progressbars = []
-        self.downloading  = []
+        self.downloading  = {}
         self.downloadTitles = []
 
         self.status = []
         self.botbots = []
         self.threadpool = QThreadPool()
+        self.threadpool.setMaxThreadCount(10)
         self.startbot = self.threadpool.start
         self.grid = QGridLayout()
         self.grid.setAlignment(Qt.AlignCenter)
@@ -40,16 +42,14 @@ class videoDownloaderGui(QMainWindow):
         self.resolution = '720p'
         self.setupGui()
         central.setLayout(self.grid)
-        
-        # connectBot = Worker(self.connectToApi) 
-        # self.startbot(connectBot)
         self.makeAndSendBot(self.connectToApi)
         
 
-    def connectToApi(self):
-        self.api = ytsearch.youtubeConnect(key.key)
-
+  
     def setupGui(self):
+        '''
+        does pretty much everything
+        '''
         mainMenu = self.menuBar()
         fileMenu = mainMenu.addMenu('&File')
         fileLocation = QAction("&file locaition", self)
@@ -122,8 +122,8 @@ class videoDownloaderGui(QMainWindow):
         self.progressGrid = QGridLayout()
         progressSpacer = QSpacerItem(20,200,QSizePolicy.Minimum,QSizePolicy.MinimumExpanding)
 
-        for i in range(10):
-            if i  % 2 == 0:
+        for i in range(20):
+            if i % 2 == 0:
                 title = QLabel()
                 title.setWordWrap(True)
                 self.progressGrid.addWidget(title,i,0,1,2)
@@ -146,7 +146,6 @@ class videoDownloaderGui(QMainWindow):
 
         self.grid.addWidget(self.videoType,3,9,1,2)
         self.grid.addItem(progressGridSpacer,1,0,rowSpan=1,columnSpan=2 )
-        #self.grid.addWidget(self.resPicker,3,1,2,2)
         self.grid.addWidget(self.titleDisplay,3,5,1,3)
         self.grid.addWidget(self.picture,4,5,3,6)
         self.grid.addWidget(self.backbtn,7,5,1,3)
@@ -154,16 +153,22 @@ class videoDownloaderGui(QMainWindow):
         self.grid.addItem(downloadSpacer,8,6,rowSpan=1,columnSpan=1 )
         self.grid.addWidget(self.downloadbtn,9,5,1,6)
         self.grid.addItem(searchbarSpacer,10,4,rowSpan=1,columnSpan=1)
-        self.grid.addWidget(self.searchbar,11,3,1,11)
+        self.grid.addWidget(self.searchbar,11,4,1,10)
         self.grid.addItem(descriptionSpacer,8,14,rowSpan=1,columnSpan=4)
         self.grid.addWidget(self.description,3,14,4,3)
-        
         self.grid.addLayout(self.progressGrid,4,0,3,4)
     
+    def connectToApi(self):
+        self.api = ytsearch.youtubeConnect(key.key)
+
+
     def setRes(self,resoulution):
         self.resolution = resoulution
 
     def searchVids(self):
+        '''
+        search through the youtube api and acts acordingly
+        '''
         while not self.api:
             time.sleep(.05)
         self.videos = self.api.video_search(self.searchbar.text(),limit=10,thumbnailQuality='maxres',defultQuality='high')
@@ -180,12 +185,18 @@ class videoDownloaderGui(QMainWindow):
             # todo make it not crash here
 
     def downloadThumbnails(self):        
+        '''
+        downloads the thumbnails of all the videos so you could display them later
+        '''
         count = 0
         for vid in self.videos:
             urlretrieve(vid.thumbnailLink, f'gui/thumbnails/thumbnail{count}.jpg' )
             count += 1
        
     def setVideo(self):
+        '''
+        set up the gui based on the current video
+        '''
         img = QPixmap(f'gui/thumbnails/thumbnail{self.index}.jpg')
         img = img.scaled(1280,720,transformMode=Qt.FastTransformation)
         self.picture.setPixmap(img)
@@ -194,12 +205,18 @@ class videoDownloaderGui(QMainWindow):
         self.downloadBtnSetup()
         
     def setTitleText(self,text):
+        '''
+        displays title text above thumbnail
+        '''
         if len(text) >= 40:
             self.titleDisplay.setText(text[:40] + '...')
         else:
             self.titleDisplay.setText(text)
 
     def changeIndex(self,num):
+        '''
+        changes the index if its not out of range
+        '''
         self.index += num
         if self.index + 1 == len(self.videos):
             self.nextbtn.setEnabled(False)
@@ -214,6 +231,9 @@ class videoDownloaderGui(QMainWindow):
         self.setVideo()
     
     def downloadBtnSetup(self):
+        '''
+        sets up the download bar based on the currently selected video
+        '''
         state = self.status[self.index]
 
         if state == 'downloading':
@@ -245,18 +265,38 @@ class videoDownloaderGui(QMainWindow):
 
         self.downloadbtn.setStyleSheet('QPushButton {background-color: %s; border: 1px solid black;border-radius: 10px;font-size: 30px;color: white;padding: 5px 15px;}''QPushButton:pressed { background-color: %s }''QPushButton:hover { background-color: %s }'%(bgColor,bgColorPressed,bgColorHover) )
         
-        #self.downloadbtn.setEnabled(False)
-        
     def downloadVideo(self):
+        '''
+        downloads video that is currently selected
+        '''
         index = self.index
         video = self.videos[index]
         self.status[index] = 'downloading'
         print('downloading ' + video.url)
+        vid = None
+        for i in range(4):
+            try:
+                yt = YouTube(video.url,on_progress_callback=self.progress_func)
+                vid = yt.streams.filter(res=self.resolution,progressive=True).first()
+                vid.download('./videos')
+                self.status[index] = 'downloaded'
+                print('download complete')
+                return
+            except:
+                print(f'tried {i} time(s)')
+                if vid in self.downloading:
+                    index = self.downloading.pop(vid)
+                    self.progressbars[index].setHidden(True)
+                    self.downloadTitles[index].setHidden(True)
+
         yt = YouTube(video.url,on_progress_callback=self.progress_func)
         vid = yt.streams.filter(res=self.resolution,progressive=True).first()
         vid.download('./videos')
         self.status[index] = 'downloaded'
-        print('download complete')
+        print('download complete')    
+        return
+
+        
     
     def downloadFailed(self, error):
         print(error)
@@ -272,26 +312,31 @@ class videoDownloaderGui(QMainWindow):
 
     def showBars(self, info):
         '''
-        display all progressBars in list
+        display all progressBars in a list
         '''
-        
         stream,progress = info
         if stream not in self.downloading:
             print(stream)
-            self.downloading.append(stream)
-            index = self.downloading.index(stream)
+            self.downloadCounter += 1
+            self.downloading[stream] = self.downloadCounter % 10
+            index = self.downloading[stream]
             self.downloadTitles[index].setText(stream.title)
             self.downloadTitles[index].setHidden(False)
         else:
-            index = self.downloading.index(stream)
+            index = self.downloading[stream]
         self.progressbars[index].setValue(progress)
         self.progressbars[index].setHidden(False)
         if progress == 100:
             self.downloadTitles[index].setHidden(True)
             self.progressbars[index].setHidden(True)
+            self.downloading.pop(stream)
+        return
 
 
     def makeAndSendBot(self,func,*args,**kwargs):
+        '''
+        makes and sends out a thread
+        '''
         self.bot = makebot(func,*args,**kwargs) 
         self.startbot(self.bot)
 
