@@ -154,7 +154,6 @@ class videoDownloaderGui(QMainWindow):
         self.grid.addItem(descriptionSpacer,8,14,rowSpan=1,columnSpan=4)
         self.grid.addWidget(self.description,3,14,4,3)
         self.grid.addLayout(self.progressGrid,4,0,3,4)
-        self.showdialog()
     
     def showdialog(self):
         d = QDialog()
