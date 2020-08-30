@@ -1,10 +1,10 @@
 # DownTube
-a YouTube downloader made from tkinter and pytube
+a YouTube downloader made from PyQt5,pytube and the youtube api
 
 
 
 
 
 
-![490r6e](https://user-images.githubusercontent.com/58964484/88214448-39480200-cc28-11ea-9f75-df7a7c40d378.gif)
+![Screenshot (66)](https://user-images.githubusercontent.com/58964484/91660237-35b75e80-eaa3-11ea-8317-52c20f5cf094.png)
 
