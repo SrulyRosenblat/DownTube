@@ -12,6 +12,7 @@ from worker import Worker, makebot
 import time
 from functools import partial
 import os
+import re
 class videoDownloaderGui(QMainWindow):
     def __init__(self, parent=None):
         '''
@@ -175,15 +176,26 @@ class videoDownloaderGui(QMainWindow):
         '''
         while not self.api:
             time.sleep(.05)
-        self.videos = self.api.video_search(self.searchbar.text(),limit=10,thumbnailQuality='maxres',defultQuality='high')
-            
-        if len(self.videos) >= 1:
+        matchedText = re.search('youtube\.com/watch\?v=(.+)',self.searchbar.text())
+        if matchedText:
+            url = matchedText.group(1)
+            self.videos = [self.api.video_by_url(url,thumbnailQuality='maxres',defultQuality='high')]
+        else:
+            self.videos = self.api.video_search(self.searchbar.text(),limit=10,thumbnailQuality='maxres',defultQuality='high')
+        videoCount = len(self.videos)
+        if videoCount  >= 1:
+            self.index = 0
             self.status = ['download' for x in self.videos]
             self.downloadThumbnails()
             self.setVideo()
-            if not self.index + 1 >= len(self.videos):
+            if  videoCount == 1:
+                self.nextbtn.setEnabled(False)
+                self.backbtn.setEnabled(False)
+            else:
                 self.nextbtn.setEnabled(True)
+                self.backbtn.setEnabled(False)
             self.searchbar.setPlaceholderText('search for video or enter url')
+
         else:
             self.emptySearch()
 
@@ -285,8 +297,6 @@ class videoDownloaderGui(QMainWindow):
             self.downloadbtn.setEnabled(True)
  
         self.downloadbtn.setStyleSheet('QPushButton {background-color: %s; border: 1px solid black;border-radius: 10px;font-size: 30px;color: white;padding: 5px 15px;}''QPushButton:pressed { background-color: %s }''QPushButton:hover { background-color: %s }'%(bgColor,bgColorPressed,bgColorHover) )
-        
-
 
     def downloadVideo(self):
         '''
