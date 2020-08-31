@@ -13,6 +13,13 @@ import time
 from functools import partial
 import os
 import re
+
+def main():
+    app = QApplication(sys.argv)
+    window = videoDownloaderGui()
+    window.show()
+    sys.exit(app.exec())
+    
 class videoDownloaderGui(QMainWindow):
     def __init__(self, parent=None):
         '''
@@ -81,7 +88,7 @@ class videoDownloaderGui(QMainWindow):
         self.downloadbtn.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred))
         self.downloadbtn.setCursor(QCursor(Qt.PointingHandCursor))
         self.downloadbtn.setStatusTip('download the current video')
-        self.downloadbtn.clicked.connect(lambda:self.makeAndSendBot(self.downloadVideo,startedFunc=self.downloadBtnSetup,progressFunc=self.showBars,finishedFunc=self.downloadBtnSetup,errorFunc = self.downloadFailed))
+        self.downloadbtn.clicked.connect(lambda:self.makeAndSendBot(self.downloadVideo,startedFunc=self.onDownloadStart,progressFunc=self.showBars,finishedFunc=self.downloadBtnSetup,errorFunc = self.downloadFailed))
 
         self.backbtn = QPushButton()
         self.backbtn.setText('<<<')
@@ -298,13 +305,16 @@ class videoDownloaderGui(QMainWindow):
  
         self.downloadbtn.setStyleSheet('QPushButton {background-color: %s; border: 1px solid black;border-radius: 10px;font-size: 30px;color: white;padding: 5px 15px;}''QPushButton:pressed { background-color: %s }''QPushButton:hover { background-color: %s }'%(bgColor,bgColorPressed,bgColorHover) )
 
+    def onDownloadStart(self):
+        self.status[self.index] = 'downloading'
+        self.downloadBtnSetup()
+
     def downloadVideo(self):
         '''
         downloads video that is currently selected
         '''
         index = self.index
         video = self.videos[index]
-        self.status[index] = 'downloading'
         print('downloading ' + video.url)
         vid = None
         for i in range(4):
@@ -328,20 +338,16 @@ class videoDownloaderGui(QMainWindow):
         self.status[index] = 'downloaded'
         print('download complete')    
         return
-
-        
-    
+   
     def downloadFailed(self, error):
         print(error)
         self.status[self.index] = 'error'
         self.downloadBtnSetup()
 
-
     def progress_func(self, stream, chunk, bytes_remaining):
         size = stream.filesize
         progress = (float(abs(bytes_remaining-size)/size))*float(100)
         self.bot.signals.progress.emit((stream , int(progress)))  
-
 
     def showBars(self, info):
         '''
@@ -363,7 +369,6 @@ class videoDownloaderGui(QMainWindow):
             self.progressbars[index].setHidden(True)
             self.downloading.pop(stream)
         return
-
 
     def makeAndSendBot(self,func,*args,**kwargs):
         '''
@@ -398,7 +403,5 @@ def findDesktop():
     else:
         return os.path.normpath(os.path.expanduser("~/Desktop"))
 
-app = QApplication(sys.argv)
-window = videoDownloaderGui()
-window.show()
-sys.exit(app.exec())
+if __name__ == "__main__":              
+    main()
