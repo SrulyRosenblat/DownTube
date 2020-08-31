@@ -31,6 +31,7 @@ class videoDownloaderGui(QMainWindow):
         self.setWindowIcon(QIcon(resource_path('./gui/py.png')))
         central = QWidget()
         self.setCentralWidget(central)
+        self.folderLocaition = addToPath(findDesktop(),'\\videos')
         self.statusBar = QStatusBar()
         self.setStatusBar(self.statusBar)      
         self.index = 0
@@ -59,7 +60,7 @@ class videoDownloaderGui(QMainWindow):
         fileLocation = QAction("&file locaition", self)
         fileLocation.setShortcut("Ctrl+F")
         fileLocation.setStatusTip('set the file location for videos')
-        fileLocation.triggered.connect(self.showdialog)
+        fileLocation.triggered.connect(self.getfolder)
         resoulutionMenu = mainMenu.addMenu('&resoulution')
         for res in ['360p','720p']:
             resoulution = QAction(f"&{res}", self)
@@ -321,7 +322,7 @@ class videoDownloaderGui(QMainWindow):
             try:
                 yt = YouTube(video.url,on_progress_callback=self.progress_func)
                 vid = yt.streams.filter(res=self.resolution,progressive=True).first()
-                vid.download(addToPath(findDesktop(),'/videos') )
+                vid.download(self.folderLocaition)
                 self.status[index] = 'downloaded'
                 print('download complete')
                 return
@@ -369,6 +370,11 @@ class videoDownloaderGui(QMainWindow):
             self.progressbars[index].setHidden(True)
             self.downloading.pop(stream)
         return
+
+    def getfolder(self):
+        dirName = QFileDialog.getExistingDirectory(caption = 'open a folder',directory='c:\\')
+        if dirName != '':
+            self.folderLocaition = os.path.normpath(dirName)
 
     def makeAndSendBot(self,func,*args,**kwargs):
         '''
