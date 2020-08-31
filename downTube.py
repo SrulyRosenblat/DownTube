@@ -13,6 +13,7 @@ import time
 from functools import partial
 import os
 import re
+import pickle
 
 def main():
     app = QApplication(sys.argv)
@@ -25,18 +26,30 @@ class videoDownloaderGui(QMainWindow):
         '''
         sets up videoDownloader gui
         '''
+        
         super().__init__(parent)
         self.setGeometry(100, 100, 2000, 1250)
         self.setWindowTitle('DownTube')
         self.setWindowIcon(QIcon(resource_path('./gui/py.png')))
         central = QWidget()
         self.setCentralWidget(central)
-        self.folderLocaition = addToPath(findDesktop(),'\\videos')
         self.statusBar = QStatusBar()
-        self.setStatusBar(self.statusBar)      
+        self.setStatusBar(self.statusBar)  
+
+        self.settings = {}
+        self.settingsFile = 'settings.pickle'
+
+        if os.path.isfile(self.settingsFile):
+            self.loadSettings()
+        else:
+            self.settings['path'] = addToPath(findDesktop(),'/downloaded videos')
+            self.settings['defultRes'] = '720p'
+            self.dumpSettings()
+            
         self.index = 0
         self.videos = []
-
+        self.resolution = self.settings['defultRes']
+        self.downloadPath = self.settings['path']
         self.downloadCounter = 0
         self.progressbars = []
         self.downloading  = {}
@@ -50,25 +63,28 @@ class videoDownloaderGui(QMainWindow):
         self.grid = QGridLayout()
         self.grid.setAlignment(Qt.AlignCenter)
         self.api = None
-        self.resolution = '720p'
+        
         central.setLayout(self.grid)
 
         self.makeAndSendBot(self.connectToApi)
 
         mainMenu = self.menuBar()
-        fileMenu = mainMenu.addMenu('&File')
-        fileLocation = QAction("&file locaition", self)
-        fileLocation.setShortcut("Ctrl+F")
-        fileLocation.setStatusTip('set the file location for videos')
+        settingsMenu = mainMenu.addMenu('&Settings')
+        fileLocation = QAction("&Download locaition", self)
+        fileLocation.setShortcut("Ctrl+SHIFT+S")
+        fileLocation.setStatusTip('set the file location to download videos to')
         fileLocation.triggered.connect(self.getfolder)
-        resoulutionMenu = mainMenu.addMenu('&resoulution')
+
+        settingsMenu.addAction(fileLocation)
+
+      
+        resoulutionMenu = mainMenu.addMenu('&Resoulution')
         for res in ['360p','720p']:
             resoulution = QAction(f"&{res}", self)
             resoulution.setStatusTip(f'set the download size to {res}')
             resoulution.triggered.connect(partial(self.setRes,res))
             resoulutionMenu.addAction(resoulution)
-        fileMenu.addAction(fileLocation)
-      
+        
         self.description = QTextBrowser()
         self.description.setText('description:\ntype somthing in to look for videos\nenjoy 🤞')
         self.description.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
@@ -163,14 +179,6 @@ class videoDownloaderGui(QMainWindow):
         self.grid.addItem(descriptionSpacer,8,14,rowSpan=1,columnSpan=4)
         self.grid.addWidget(self.description,3,14,4,3)
         self.grid.addLayout(self.progressGrid,4,0,3,4)
-    
-    def showdialog(self):
-        d = QDialog()
-        b1 = QPushButton("ok",d)
-        b1.move(50,50)
-        d.setWindowTitle("Dialog")
-        d.setWindowModality(Qt.ApplicationModal)
-        d.exec_()
 
     def connectToApi(self):
         self.api = ytsearch.youtubeConnect(key.key)
@@ -322,7 +330,7 @@ class videoDownloaderGui(QMainWindow):
             try:
                 yt = YouTube(video.url,on_progress_callback=self.progress_func)
                 vid = yt.streams.filter(res=self.resolution,progressive=True).first()
-                vid.download(self.folderLocaition)
+                vid.download(self.settings['path'])
                 self.status[index] = 'downloaded'
                 print('download complete')
                 return
@@ -374,7 +382,16 @@ class videoDownloaderGui(QMainWindow):
     def getfolder(self):
         dirName = QFileDialog.getExistingDirectory(caption = 'open a folder',directory='c:\\')
         if dirName != '':
-            self.folderLocaition = os.path.normpath(dirName)
+            self.settings['path'] = os.path.normpath(dirName)
+            self.dumpSettings()
+
+    def loadSettings(self):
+        with open(self.settingsFile,'rb') as f:
+            self.settings = pickle.load(f)
+
+    def dumpSettings(self):
+        with open(self.settingsFile,'wb') as f:
+                pickle.dump(self.settings,f)
 
     def makeAndSendBot(self,func,*args,**kwargs):
         '''
