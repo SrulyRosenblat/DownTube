@@ -9,4 +9,3 @@ realtime progressbars
 * right click on the file you instaled and then click on extract all
 * seach through the extracted folder and double click on DownTube.exe (the file with the DownTube logo)
 * if you want to move the file create a shortcut **do not move the file**
-![alt text](./demos/Annotation 2020-09-07 191330.jpg)
