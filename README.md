@@ -1,5 +1,5 @@
 # DownTube
-![Screenshot (66)](https://user-images.githubusercontent.com/58964484/91660237-35b75e80-eaa3-11ea-8317-52c20f5cf094.png)
+
 ## a fast and simple way to download youtube videos
 a full fledged youtube downloader with support for searching youtube and 
 realtime progressbars
@@ -10,3 +10,4 @@ realtime progressbars
 * seach through the extracted folder and double click on DownTube.exe (the file with the DownTube logo)
 * if you want to move the file create a shortcut **do not move the file**
 
+![Screenshot (66)](https://user-images.githubusercontent.com/58964484/91660237-35b75e80-eaa3-11ea-8317-52c20f5cf094.png)
