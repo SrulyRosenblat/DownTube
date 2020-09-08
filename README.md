@@ -10,7 +10,7 @@ realtime progressbars
 ## how to download and install
 * download the downtube.zip file
 * right click on the file you instaled and then click on extract all
-* seach through the extracted folder and double click on DownTube.exe (the file with the DownTube logo)
+* search through the extracted folder and double click on DownTube.exe (the file with the DownTube logo)
 * if you want to move the file create a shortcut **do not move the file**
 
 ## some of the code behind the project
@@ -39,9 +39,9 @@ realtime progressbars
   600+ lines of code
 
 ## pictures
+sample 1
 ![downtube demo picture 1](./demos/bear.jpg?raw=true "Title")
 
-
-
+sample 2
 ![downtube demo picture 2](./demos/phone.jpg?raw=true "Title")
 
