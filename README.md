@@ -4,6 +4,9 @@
 a full fledged youtube downloader with support for searching youtube and 
 realtime progressbars
 
+*only works on windows*
+
+
 ## how to download and install
 * download the downtube.zip file
 * right click on the file you instaled and then click on extract all
