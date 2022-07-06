@@ -1,6 +1,6 @@
 # DownTube (depreciated)
 
-## fast and simple way to download youtube videos
+## a fast and simple way to download youtube videos
 a full fledged youtube downloader with support for searching youtube and 
 realtime progressbars
 
