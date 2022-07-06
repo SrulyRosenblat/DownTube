@@ -1,10 +1,10 @@
-# DownTube
+# DownTube (depreciated)
 
 ## fast and simple way to download youtube videos
 a full fledged youtube downloader with support for searching youtube and 
 realtime progressbars
 
-*only works on windows*
+*only works on windows* 
 
 
 ## how to download and install
