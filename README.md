@@ -2,7 +2,7 @@
 
 ## a fast and simple way to download youtube videos
 a full fledged youtube downloader with support for searching youtube, simultaneous downloads and 
-realtime progressbars
+realtime progressbars.
 
 *only works on windows* 
 
